@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра в палочки с обучением</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .game-modes {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .mode-btn {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .mode-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .settings {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        input[type="number"] {
+            padding: 8px;
+            width: 80px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .checkbox-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-group input {
+            margin-right: 10px;
+        }
+        
+        .game-area {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        #status {
+            font-weight: bold;
+            margin: 15px 0;
+            font-size: 18px;
+            text-align: center;
+            color: #2c3e50;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+        
+        .sticks-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .stick {
+            width: 14px;
+            height: 50px;
+            background-color: #8B4513;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 2px;
+        }
+        
+        .stick.selected {
+            background-color: #FF5722;
+            transform: scale(1.05);
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        
+        .stick.removed {
+            background-color: #ccc;
+            opacity: 0.5;
+            cursor: default;
+        }
+        
+        .stick-number {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #new-game {
+            background: #3498db;
+        }
+        
+        #new-game:hover {
+            background: #2980b9;
+        }
+        
+        .training-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .tab-btn {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-radius: 0 0 4px 4px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .math-proof {
+            font-family: "Courier New", monospace;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        
+        .move-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .move-node {
+            padding: 8px;
+            margin: 2px 0;
+            background: #e9ecef;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .move-node:hover {
+            background: #d1e7dd;
+        }
+        
+        .move-node.best {
+            background: #d4edda;
+            font-weight: bold;
+            border-left: 4px solid #28a745;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-item {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .stat-item strong {
+            color: #2c3e50;
+        }
+        
+        #hint-area {
+            margin-top: 15px;
+            padding: 12px;
+            background: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            display: none;
+            border-radius: 4px;
+            animation: fadeIn 0.5s;
+        }
+        
+        #hint-text {
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        #hint-btn {
+            margin-top: 10px;
+            background: #2196F3;
+        }
+        
+        #hint-btn:hover {
+            background: #0b7dda;
+        }
+        
+        .strategy-explanation {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .game-modes {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .mode-btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Игра в палочки с обучением</h1>
+    
+    <div class="game-modes">
+        <button class="mode-btn active" data-mode="1">Режим 1: 1..k палочек</button>
+        <button class="mode-btn" data-mode="2">Режим 2: a..b палочек</button>
+        <button class="mode-btn" data-mode="3">Режим 3: 1..k подряд</button>
+        <button class="mode-btn" data-mode="4">Режим 4: a..b подряд</button>
+        <button class="mode-btn" data-mode="5">Режим 5: 1,2 или 3 подряд</button>
+    </div>
+    
+    <div class="settings">
+        <div class="input-group">
+            <label for="stick-count">Количество палочек (5-50):</label>
+            <input type="number" id="stick-count" min="5" max="50" value="15">
+        </div>
+        
+        <div class="input-group" id="mode-1-params">
+            <label for="k-value">Максимум за ход (k):</label>
+            <input type="number" id="k-value" min="1" value="3">
+        </div>
+        
+        <div class="input-group" id="mode-2-params" style="display: none;">
+            <label for="a-value">Минимум (a):</label>
+            <input type="number" id="a-value" min="1" value="1">
+            <label for="b-value">Максимум (b):</label>
+            <input type="number" id="b-value" min="2" value="3">
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="computer-first">
+            <label for="computer-first">Компьютер ходит первым</label>
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="training-mode" checked>
+            <label for="training-mode">Режим обучения</label>
+        </div>
+        
+        <button id="start-btn">Начать игру</button>
+    </div>
+
+    <div class="game-area">
+        <div id="status">Ход игрока</div>
+        <div class="sticks-container" id="sticks"></div>
+        
+        <div class="controls">
+            <button id="make-move">Сделать ход</button>
+            <button id="new-game">Новая игра</button>
+        </div>
+        
+        <div class="training-panel" id="training-panel">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="strategy">Стратегия</button>
+                <button class="tab-btn" data-tab="math">Математика</button>
+                <button class="tab-btn" data-tab="tree">Дерево ходов</button>
+                <button class="tab-btn" data-tab="stats">Статистика</button>
+            </div>
+            
+            <div class="tab-content active" id="strategy-tab">
+                <h3>Оптимальная стратегия</h3>
+                <div class="strategy-explanation" id="strategy-explanation"></div>
+                <button id="hint-btn">Показать подсказку</button>
+                <div id="hint-area">
+                    <p id="hint-text"></p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="math-tab">
+                <h3>Математическое обоснование</h3>
+                <div class="math-proof" id="math-proof"></div>
+            </div>
+            
+            <div class="tab-content" id="tree-tab">
+                <h3>Дерево возможных ходов</h3>
+                <div class="move-tree" id="move-tree"></div>
+            </div>
+            
+            <div class="tab-content" id="stats-tab">
+                <h3>Статистика игры</h3>
+                <div class="stats-grid" id="game-stats"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class StickGame {
+            constructor(n, regime, k, a, b, computerFirst) {
+                this.n = n;
+                this.regime = regime;
+                this.k = k;
+                this.a = a;
+                this.b = b;
+                this.board = (1 << n) - 1;
+                this.computerTurn = computerFirst;
+                this.win = [];
+                this.g = [];
+                this.grCache = new Map();
+                this.S = [];
+                
+                this.initGame();
+
+                
+            }
+            
+            initGame() {
+                switch (this.regime) {
+                    case 1:
+                        for (let i = 1; i <= this.k; i++) this.S.push(i);
+                        break;
+                    case 2:
+                        for (let i = this.a; i <= this.b; i++) this.S.push(i);
+                        this.precomputeSubtractionDP();
+                        break;
+                    case 3:
+                        for (let i = 1; i <= this.k; i++) this.S.push(i);
+                        this.precomputeSegmentGrundy();
+                        break;
+                    case 4:
+                        for (let i = this.a; i <= this.b; i++) this.S.push(i);
+                        this.precomputeSegmentGrundy();
+                        break;
+                    case 5:
+                        break;
+                }
+            }
+            grundySegment(L) {
+                if (L === 0) return 0;
+                if (this.grundyCache.has(L)) return this.grundyCache.get(L);
+                
+                const moves = new Set();
+                
+                for (let i = 0; i < L; i++) {
+                    const left = i;
+                    const right = L - i - 1;
+                    moves.add(this.grundySegment(left) ^ this.grundySegment(right));
+                }
+                
+                if (L >= 2) {
+                    for (let i = 0; i < L-1; i++) {
+                        for (let j = i+1; j < L; j++) {
+                            const left = i;
+                            const middle = j - i - 1;
+                            const right = L - j - 1;
+                            moves.add(this.grundySegment(left) ^ this.grundySegment(middle) ^ this.grundySegment(right));
+                        }
+                    }
+                }
+                
+                if (L >= 3) {
+                    for (let i = 0; i <= L-3; i++) {
+                        const left = i;
+                        const right = L - i - 3;
+                        moves.add(this.grundySegment(left) ^ this.grundySegment(right));
+                    }
+                }
+                
+                let mex = 0;
+                while (moves.has(mex)) mex++;
+                
+                this.grundyCache.set(L, mex);
+                return mex;
+            }
+            
+            grundyNumber() {
+                const segments = this.segments(this.board);
+                let total = 0;
+                for (const seg of segments) {
+                    total ^= this.grundySegment(seg.length);
+                }
+                return total;
+            }
+            
+            moveR5() {
+                const currentGrundy = this.grundyNumber();
+                if (currentGrundy === 0) {
+                    return this.randomMoveR5();
+                }
+                
+                const segments = this.segments(this.board);
+                
+                for (const seg of segments) {
+                    if (seg.length >= 3) {
+                        for (let i = 0; i <= seg.length-3; i++) {
+                            const move = [seg.start + i, seg.start + i + 1, seg.start + i + 2];
+                            const newBoard = this.applyMoveSimulation(move);
+                            if (this.grundyNumberForBoard(newBoard) === 0) {
+                                return move;
+                            }
+                        }
+                    }
+                }
+                
+                const alive = this.getAliveIndices(this.n);
+                for (let i = 0; i < alive.length; i++) {
+                    for (let j = i+1; j < alive.length; j++) {
+                        const move = [alive[i], alive[j]];
+                        const newBoard = this.applyMoveSimulation(move);
+                        if (this.grundyNumberForBoard(newBoard) === 0) {
+                            return move;
+                        }
+                    }
+                }
+                
+                for (const stick of alive) {
+                    const move = [stick];
+                    const newBoard = this.applyMoveSimulation(move);
+                    if (this.grundyNumberForBoard(newBoard) === 0) {
+                        return move;
+                    }
+                }
+                
+                return this.randomMoveR5();
+            }
+            
+            grundyNumberForBoard(board) {
+                const segments = this.segments(board);
+                let total = 0;
+                for (const seg of segments) {
+                    total ^= this.grundySegment(seg.length);
+                }
+                return total;
+            }
+            
+            randomMoveR5() {
+                const alive = this.getAliveIndices(this.n);
+                if (alive.length === 0) return [];
+                
+                for (let i = 0; i < this.n-2; i++) {
+                    if (((this.board >> i) & 7) === 7) { 
+                        return [i, i+1, i+2];
+                    }
+                }
+                
+                if (alive.length >= 2) {
+                    return [alive[0], alive[1]];
+                }
+                
+                return [alive[0]];
+            }
+            getHint() {
+                if (this.regime !== 5) return this.bestMove();
+                
+                const currentGrundy = this.grundyNumber();
+                if (currentGrundy === 0) return null;
+                
+                const moves = this.suggestMoves();
+                for (const move of moves) {
+                    const newBoard = this.applyMoveSimulation(move);
+                    if (this.grundyNumberForBoard(newBoard) === 0) {
+                        return move;
+                    }
+                }
+                return null;
+            }
+            showHint() {
+                const hintArea = document.getElementById('hint-area');
+                const hintText = document.getElementById('hint-text');
+                
+                if (this.regime !== 5) {
+                    const bestMove = this.bestMove();
+                    if (bestMove) {
+                        hintText.innerHTML = `Лучший ход: взять палочки ${bestMove.map(i => i+1).join(', ')}`;
+                    } else {
+                        hintText.innerHTML = "Вы в проигрышной позиции";
+                    }
+                    hintArea.style.display = 'block';
+                    return;
+                }
+                
+                const grundyValue = this.grundyNumber();
+                const hintMove = this.getHint();
+                
+                if (hintMove) {
+                    hintText.innerHTML = `
+                        <strong>Лучший ход:</strong> взять палочки ${hintMove.map(i => i+1).join(', ')}<br>
+                        <strong>Число Гранди:</strong> ${grundyValue}<br>
+                        <strong>Стратегия:</strong> этот ход обнулит число Гранди`;
+                } else {
+                    hintText.innerHTML = `
+                        <strong>Проигрышная позиция</strong><br>
+                        <strong>Число Гранди:</strong> ${grundyValue}<br>
+                        <strong>Совет:</strong> попробуйте взять 1-2 палочки`;
+                }
+                hintArea.style.display = 'block';
+            }
+            precomputeSubtractionDP() {
+                this.win = new Array(this.n + 1).fill(false);
+                for (let m = 1; m <= this.n; m++) {
+                    for (const s of this.S) {
+                        if (m >= s && !this.win[m - s]) {
+                            this.win[m] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            precomputeSegmentGrundy() {
+                this.g = new Array(this.n + 1).fill(0);
+                for (let L = 1; L <= this.n; L++) {
+                    const reach = new Set();
+                    for (const l of this.S) {
+                        if (l > L) continue;
+                        for (let left = 0; left <= L - l; left++) {
+                            const right = L - l - left;
+                            reach.add(this.g[left] ^ this.g[right]);
+                        }
+                    }
+                    let gr = 0;
+                    while (reach.has(gr)) gr++;
+                    this.g[L] = gr;
+                }
+            }
+            
+            isGameOver() {
+                return this.board === 0;
+            }
+            
+            getAliveIndices(count) {
+                const indices = [];
+                for (let i = 0; i < this.n && indices.length < count; i++) {
+                    if ((this.board >> i) & 1) indices.push(i);
+                }
+                return indices;
+            }
+            
+            segments(board) {
+                const segments = [];
+                let start = -1;
+                for (let i = 0; i < this.n; i++) {
+                    if ((board >> i) & 1) {
+                        if (start === -1) start = i;
+                    } else {
+                        if (start !== -1) {
+                            segments.push({ start, length: i - start });
+                            start = -1;
+                        }
+                    }
+                }
+                if (start !== -1) {
+                    segments.push({ start, length: this.n - start });
+                }
+                return segments;
+            }
+            
+            applyMove(indices) {
+                for (const i of indices) {
+                    if (i < 0 || i >= this.n || !((this.board >> i) & 1)) {
+                        throw new Error(`Нельзя удалить палочку ${i}`);
+                    }
+                }
+                for (const i of indices) {
+                    this.board &= ~(1 << i);
+                }
+            }
+            
+            moveR1() {
+                const m = this.countBits(this.board);
+                let r = m % (this.k + 1);
+                if (r === 0) r = 1 + Math.floor(Math.random() * this.k);
+                return this.getAliveIndices(r);
+            }
+            
+            moveR2() {
+                const m = this.countBits(this.board);
+                for (const s of this.S) {
+                    if (m >= s && !this.win[m - s]) {
+                        return this.getAliveIndices(s);
+                    }
+                }
+                const options = this.S.filter(s => s <= m);
+                if (options.length === 0) return [];
+                const s = options[Math.floor(Math.random() * options.length)];
+                return this.getAliveIndices(s);
+            }
+            
+            nimValueR34(board) {
+                let nim = 0;
+                for (const s of this.segments(board)) {
+                    nim ^= this.g[s.length];
+                }
+                return nim;
+            }
+            
+            moveR34() {
+                for (const seg of this.segments(this.board)) {
+                    for (const l of this.S) {
+                        if (l > seg.length) continue;
+                        for (let offset = 0; offset <= seg.length - l; offset++) {
+                            const idx = [];
+                            for (let i = 0; i < l; i++) {
+                                idx.push(seg.start + offset + i);
+                            }
+                            const board2 = this.applyMoveSimulation(idx);
+                            if (this.nimValueR34(board2) === 0) {
+                                return idx;
+                            }
+                        }
+                    }
+                }
+                
+                const segs = this.segments(this.board);
+                const seg = segs[Math.floor(Math.random() * segs.length)];
+                let l = this.S[Math.floor(Math.random() * this.S.length)];
+                while (l > seg.length) {
+                    l = this.S[Math.floor(Math.random() * this.S.length)];
+                }
+                const offset = Math.floor(Math.random() * (seg.length - l + 1));
+                const idx = [];
+                for (let i = 0; i < l; i++) {
+                    idx.push(seg.start + offset + i);
+                }
+                return idx;
+            }
+            
+            moveR5() {
+                const segments = this.segments(this.board);
+                
+                const alive = this.getAliveIndices(this.n);
+                if (alive.length <= 3) return alive;
+                
+                for (const seg of segments) {
+                    if (seg.length >= 3) {
+                        for (let i = 0; i <= seg.length - 3; i++) {
+                            const move = [seg.start + i, seg.start + i + 1, seg.start + i + 2];
+                            const board2 = this.applyMoveSimulation(move);
+                            if (this.grundyR5(board2) === 0) {
+                                return move;
+                            }
+                        }
+                    }
+                }
+                
+                for (let i = 0; i < alive.length; i++) {
+                    for (let j = i + 1; j < alive.length; j++) {
+                        const move = [alive[i], alive[j]];
+                        const board2 = this.applyMoveSimulation(move);
+                        if (this.grundyR5(board2) === 0) {
+                            return move;
+                        }
+                    }
+                }
+                
+                for (const stick of alive) {
+                    const move = [stick];
+                    const board2 = this.applyMoveSimulation(move);
+                    if (this.grundyR5(board2) === 0) {
+                        return move;
+                    }
+                }
+                
+                if (segments.some(seg => seg.length >= 3)) {
+                    const seg = segments.find(seg => seg.length >= 3);
+                    return [seg.start, seg.start + 1, seg.start + 2];
+                }
+                
+                if (alive.length >= 2) {
+                    return [alive[0], alive[1]];
+                }
+                
+                return [alive[0]];
+            }
+            
+            grundyR5Segment(length) {
+                if (length === 0) return 0;
+                if (this.grCache.has(length)) return this.grCache.get(length);
+                
+                const reach = new Set();
+                for (let i = 0; i < length; i++) {
+                    reach.add(this.grundyR5Segment(length - 1));
+                }
+                if (length >= 2) {
+                    reach.add(this.grundyR5Segment(length - 2));
+                }
+                if (length >= 3) {
+                    reach.add(this.grundyR5Segment(length - 3));
+                }
+                
+                let gr = 0;
+                while (reach.has(gr)) gr++;
+                this.grCache.set(length, gr);
+                return gr;
+            }
+            
+            grundyR5(board) {
+                const segments = this.segments(board);
+                let nim = 0;
+                for (const seg of segments) {
+                    nim ^= this.grundyR5Segment(seg.length);
+                }
+                return nim;
+            }
+            
+            computerMove() {
+                if (this.isGameOver()) return [];
+                
+                let move = [];
+                switch (this.regime) {
+                    case 1: move = this.moveR1(); break;
+                    case 2: move = this.moveR2(); break;
+                    case 3:
+                    case 4: move = this.moveR34(); break;
+                    case 5: move = this.moveR5(); break;
+                }
+                
+                if (move.length > 0) {
+                    this.applyMove(move);
+                }
+                return move;
+            }
+            
+            suggestMoves() {
+                const result = [];
+                switch (this.regime) {
+                    case 1:
+                    case 2:
+                        const m = this.countBits(this.board);
+                        for (const s of this.S) {
+                            if (s <= m) {
+                                result.push(this.getAliveIndices(s));
+                            }
+                        }
+                        break;
+                    case 3:
+                    case 4:
+                        for (const seg of this.segments(this.board)) {
+                            for (const l of this.S) {
+                                if (l > seg.length) continue;
+                                for (let offset = 0; offset <= seg.length - l; offset++) {
+                                    const move = [];
+                                    for (let i = 0; i < l; i++) {
+                                        move.push(seg.start + offset + i);
+                                    }
+                                    result.push(move);
+                                }
+                            }
+                        }
+                        break;
+                    case 5:
+                        const bitsList = this.getAliveIndices(this.n);
+                        // 1 любая
+                        for (const i of bitsList) {
+                            result.push([i]);
+                        }
+                        // 2 любые
+                        for (let i = 0; i < bitsList.length; i++) {
+                            for (let j = i + 1; j < bitsList.length; j++) {
+                                result.push([bitsList[i], bitsList[j]]);
+                            }
+                        }
+                        // 3 подряд
+                        for (let i = 0; i < this.n - 2; i++) {
+                            if (((this.board >> i) & 7) === 7) {
+                                result.push([i, i + 1, i + 2]);
+                            }
+                        }
+                        break;
+                }
+                return result;
+            }
+            
+            bestMove() {
+                for (const move of this.suggestMoves()) {
+                    const simBoard = this.applyMoveSimulation(move);
+                    
+                    switch (this.regime) {
+                        case 1:
+                            if (this.countBits(simBoard) % (this.k + 1) === 0) {
+                                return move;
+                            }
+                            break;
+                        case 2:
+                            const m = this.countBits(simBoard);
+                            if (m < this.win.length && !this.win[m]) {
+                                return move;
+                            }
+                            break;
+                        case 3:
+                        case 4:
+                            if (this.nimValueR34(simBoard) === 0) {
+                                return move;
+                            }
+                            break;
+                        case 5:
+                            if (this.grundyR5(simBoard) === 0) {
+                                return move;
+                            }
+                            break;
+                    }
+                }
+                return null;
+            }
+            
+            countBits(n) {
+                let count = 0;
+                while (n) {
+                    count += n & 1;
+                    n >>= 1;
+                }
+                return count;
+            }
+            
+            applyMoveSimulation(indices) {
+                let board = this.board;
+                for (const i of indices) {
+                    board &= ~(1 << i);
+                }
+                return board;
+            }
+            
+            getBoardArray() {
+                const arr = [];
+                for (let i = 0; i < this.n; i++) {
+                    arr.push((this.board >> i) & 1);
+                }
+                return arr;
+            }
+        }
+
+        let game;
+        let stats = {
+            totalGames: 0,
+            wins: 0,
+            losses: 0,
+            winRate: '0%'
+        };
+
+        function loadStats() {
+            const savedStats = localStorage.getItem('stickGameStats');
+            if (savedStats) {
+                stats = JSON.parse(savedStats);
+            }
+        }
+
+        function saveStats() {
+            localStorage.setItem('stickGameStats', JSON.stringify(stats));
+        }
+
+        function updateStats(result) {
+            stats.totalGames++;
+            if (result === 'win') stats.wins++;
+            if (result === 'loss') stats.losses++;
+            stats.winRate = Math.round((stats.wins / stats.totalGames) * 100) + '%';
+            saveStats();
+            displayStats();
+        }
+
+        function displayStats() {
+            const statsContainer = document.getElementById('game-stats');
+            statsContainer.innerHTML = `
+                <div class="stat-item"><strong>Всего игр:</strong> ${stats.totalGames}</div>
+                <div class="stat-item"><strong>Побед:</strong> ${stats.wins}</div>
+                <div class="stat-item"><strong>Поражений:</strong> ${stats.losses}</div>
+                <div class="stat-item"><strong>Процент побед:</strong> ${stats.winRate}</div>
+                <div class="stat-item"><strong>Текущий режим:</strong> ${document.querySelector('.mode-btn.active').textContent}</div>
+                <div class="stat-item"><strong>Палочек:</strong> ${document.getElementById('stick-count').value}</div>
+            `;
+        }
+
+        const strategyExplanations = {
+            1: "В этом режиме оптимальная стратегия - оставлять противнику количество палочек, кратное (k+1). Если текущее количество палочек N делится на (k+1) без остатка, любое ваше действие проигрышное. Всегда старайтесь оставлять после своего хода количество палочек, равное (k+1), (2k+2) и т.д.",
+            2: "Здесь нужно оставлять противнику позиции, где количество палочек равно одному из проигрышных чисел. Проигрышные числа вычисляются рекурсивно: позиция проигрышная, если из нее все возможные ходы ведут в выигрышные позиции. Для этого режима нет простой формулы, нужно запоминать проигрышные позиции.",
+            3: "Стратегия аналогична Ним-игре. Нужно оставлять противнику позиции с нулевой суммой по модулю 2 для всех сегментов палочек. Ключевое понятие - 'ним-сумма' (XOR всех сегментов). Делайте ход, который обнуляет ним-сумму.",
+            4: "Усложненная версия режима 3. Оптимальная стратегия требует вычисления grundy-чисел для каждого сегмента палочек и их комбинации с помощью операции XOR. Вычисляйте grundy-числа для всех возможных ходов и выбирайте ход, приводящий к нулевой сумме.",
+            5: "Особый режим, где можно брать 1, 2 любые или 3 подряд палочки. Выигрышная стратегия основана на оставлении противнику позиций, где количество палочек кратно 4. Если N ≡ 0 mod 4, вы в проигрышной позиции, иначе берите 1, 2 или 3 палочки, чтобы оставить кратное 4."
+        };
+
+        const mathProofs = {
+            1: `Теорема: Игрок может гарантировать победу, если после его хода количество палочек N ≡ 0 mod (k+1)
+
+Доказательство:
+1. Базовый случай: N = 0 - проигрышная позиция
+2. Если N ≡ 0 mod (k+1), любой ход (взятие от 1 до k палочек) оставит N' ≢ 0 mod (k+1)
+3. Противник оставит N'' ≡ 0 mod (k+1), так как можно взять (N' mod (k+1)) палочек
+4. Процесс повторяется до N = 0
+
+Пример для k=3 (N=15):
+Вы берете 3 палочки (15 % 4 = 3), оставляя 12 (12 % 4 = 0)`,
+            2: `Рекуррентное соотношение для проигрышных позиций:
+L(n) = ¬(L(n-a) ∨ L(n-a-1) ∨ ... ∨ L(n-b))
+где:
+- L(n) = true, если позиция проигрышная
+- a, b - минимальное и максимальное количество палочек за ход
+
+Вычисление:
+1. L(0) = true (проигрыш)
+2. L(n) = false, если ∃s∈[a,b] такой, что L(n-s) = true
+3. В противном случае L(n) = true
+
+Пример для a=1, b=3:
+L(0)=T, L(1)=F, L(2)=F, L(3)=F, L(4)=T (так как L(3),L(2),L(1)=F)`,
+            3: `Ним-сумма вычисляется как XOR всех сегментов:
+S = g(l1) XOR g(l2) XOR ... XOR g(lk)
+где g(l) - grundy-число для сегмента длины l
+
+Выигрышная стратегия:
+1. Вычислить текущую ним-сумму S
+2. Если S ≠ 0, сделать ход, приводящий S к 0
+3. Если S = 0, любая позиция проигрышная
+
+Grundy-числа для режима 3:
+g(l) = mex({g(l-s) XOR g(r) | s∈[1,k], r=l-s})
+где mex - минимальное исключенное неотрицательное число`,
+            4: `Grundy-числа для сегментов длины l при возможных ходах от a до b:
+g(l) = mex({g(l-s) XOR g(r) | s ∈ [a,b], r = l-s})
+
+Вычисление:
+1. g(0) = 0
+2. Для каждого l находим все возможные s ∈ [a,b]
+3. Для каждого s вычисляем g(l-s) XOR g(r)
+4. g(l) = mex всех полученных значений
+
+Стратегия:
+1. Разбить доску на сегменты
+2. Вычислить grundy-число для каждого сегмента
+3. Вычислить общую ним-сумму (XOR всех grundy-чисел)
+4. Сделать ход, приводящий ним-сумму к 0`,
+            5: ` Доказательство:
+
+1. Базовые случаи:
+G(0) = 0 (нет палочек - проигрыш)
+G(1) = mex{G(0)} = 1
+G(2) = mex{G(0), G(1), G(1)^G(0)} = mex{0,1,1} = 2
+G(3) = mex{G(0), G(1), G(2), G(1)^G(1), G(2)^G(0), G(3-3)} = mex{0,1,2,0,2,0} = 3
+2. Рекуррентная формула:
+Для n ≥ 4:
+G(n) = mex{
+G(n-1), // взяли 1
+G(n-2), // взяли 2 подряд
+G(n-3), // взяли 3 подряд
+G(k)^G(n-k-1) для 1≤k<n, // взяли 1 любую
+G(k)^G(m)^G(n-k-m-2) // взяли 2 любые
+}
+3. Выигрышная стратегия:
+Если G(n) ≠ 0, существует ход к позиции с G = 0
+Если G(n) = 0, любой ход ведёт в G ≠ 0
+4. Пример вычисления:
+Для n=4:
+G(4) = mex{
+G(3)=3,
+G(2)=2,
+G(1)=1,
+G(0)^G(3)=3,
+G(1)^G(2)=3,
+G(1)^G(1)^G(1)=1
+} = mex{1,2,3} = 0
+5. Инвариант:
+Позиции с G(n)=0 соответствуют n ≡ 0 mod 4:
+G(0)=0, G(4)=0, G(8)=0, ...
+        Это доказывается по индукции, используя рекуррентную формулу`
+
+        };
+
+        function updateStrategyExplanation() {
+            const regime = parseInt(document.querySelector('.mode-btn.active').dataset.mode);
+            document.getElementById('strategy-explanation').textContent = strategyExplanations[regime];
+            document.getElementById('math-proof').textContent = mathProofs[regime];
+        }
+
+        document.getElementById('hint-btn').addEventListener('click', function() {
+            const bestMove = game.bestMove();
+            const hintArea = document.getElementById('hint-area');
+            const hintText = document.getElementById('hint-text');
+            
+            if (bestMove) {
+                hintText.innerHTML = 
+                    `<strong>Лучший ход:</strong> взять палочки ${bestMove.map(i => i+1).join(', ')}.<br>
+                    <strong>Почему:</strong> это оставит компьютеру проигрышную позицию.`;
+            } else {
+                hintText.innerHTML = 
+                    "<strong>Вы в проигрышной позиции.</strong> Любой ваш ход приведёт к победе компьютера при его оптимальной игре.";
+            }
+            
+            hintArea.style.display = 'block';
+        });
+
+        function visualizeMoveTree() {
+            const treeContainer = document.getElementById('move-tree');
+            treeContainer.innerHTML = '';
+            
+            if (game.isGameOver()) {
+                treeContainer.innerHTML = '<p>Игра завершена</p>';
+                return;
+            }
+            
+            const moves = game.suggestMoves();
+            const bestMove = game.bestMove();
+            
+            if (moves.length === 0) {
+                treeContainer.innerHTML = '<p>Нет возможных ходов</p>';
+                return;
+            }
+            
+            moves.forEach(move => {
+                const isBest = bestMove && JSON.stringify(move) === JSON.stringify(bestMove);
+                const node = document.createElement('div');
+                node.className = `move-node ${isBest ? 'best' : ''}`;
+                node.textContent = `Взять ${move.length} палочек: ${move.map(i => i+1).join(', ')}`;
+                treeContainer.appendChild(node);
+            });
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    if (this.getAttribute('data-tab') === 'tree') {
+                        visualizeMoveTree();
+                    } else if (this.getAttribute('data-tab') === 'stats') {
+                        displayStats();
+                    }
+                });
+            });
+        }
+
+        function validateInputs() {
+            const n = parseInt(document.getElementById('stick-count').value);
+            const k = parseInt(document.getElementById('k-value').value);
+            const a = parseInt(document.getElementById('a-value').value);
+            const b = parseInt(document.getElementById('b-value').value);
+            const regime = parseInt(document.querySelector('.mode-btn.active').dataset.mode);
+
+            if (isNaN(n) || n < 5 || n > 50) {
+                alert('Количество палочек должно быть от 5 до 50');
+                return false;
+            }
+
+            if (regime === 1 || regime === 3) {
+                if (isNaN(k) || k < 1 || k > n) {
+                    alert(`Для этого режима k должно быть от 1 до ${n}`);
+                    return false;
+                }
+            }
+
+            if (regime === 2 || regime === 4) {
+                if (isNaN(a) || isNaN(b) || a < 1 || b < 1 || a > n || b > n || a >= b) {
+                    alert(`Для этого режима:\n- a и b должны быть от 1 до ${n}\n- a должно быть меньше b`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function updateGameView() {
+            const sticksContainer = document.getElementById('sticks');
+            sticksContainer.innerHTML = '';
+            
+            const board = game.getBoardArray();
+            board.forEach((exists, index) => {
+                const stick = document.createElement('div');
+                stick.className = `stick ${exists ? '' : 'removed'}`;
+                stick.dataset.index = index;
+                stick.innerHTML = `<span class="stick-number">${index + 1}</span>`;
+                
+                if (exists && !game.computerTurn && !game.isGameOver()) {
+                    stick.addEventListener('click', () => handleStickClick(stick));
+                }
+                
+                sticksContainer.appendChild(stick);
+            });
+            
+            document.getElementById('status').textContent = 
+                game.isGameOver() 
+                    ? game.computerTurn ? "Вы выиграли!" : "Компьютер выиграл!"
+                    : game.computerTurn ? "Ход компьютера..." : "Ваш ход";
+            
+            document.getElementById('make-move').disabled = game.computerTurn || game.isGameOver();
+        }
+
+        function handleStickClick(stick) {
+            const clickedIndex = parseInt(stick.dataset.index);
+            const isSelected = stick.classList.contains('selected');
+            
+            if (isSelected) {
+                stick.classList.remove('selected');
+                return;
+            }
+            
+            if (game.regime >= 3 && game.regime <= 4) {
+                const selected = Array.from(document.querySelectorAll('.stick.selected'))
+                    .map(el => parseInt(el.dataset.index))
+                    .sort((a, b) => a - b);
+                
+                if (selected.length === 0) {
+                    stick.classList.add('selected');
+                    return;
+                }
+                
+                const lastIndex = selected[selected.length - 1];
+                if (clickedIndex === lastIndex + 1) {
+                    stick.classList.add('selected');
+                }
+                return;
+            }
+            
+            if (game.regime === 5) {
+                const selected = Array.from(document.querySelectorAll('.stick.selected'))
+                    .map(el => parseInt(el.dataset.index))
+                    .sort((a, b) => a - b);
+                
+                if (selected.length >= 3) return;
+
+                if (selected.length === 2) {
+                    const indexes = [...selected, clickedIndex].sort((a, b) => a - b);
+                    if (indexes[2] === indexes[1] + 1 && indexes[1] === indexes[0] + 1) {
+                        stick.classList.add('selected');
+                    }
+                    return;
+                }
+                
+                if (selected.length === 1) {
+                    stick.classList.add('selected');
+                    return;
+                }
+                
+                stick.classList.add('selected');
+                return;
+            }
+            
+            stick.classList.add('selected');
+        }
+
+        function computerTurn() {
+            if (!game || !game.computerTurn || game.isGameOver()) return;
+            
+            setTimeout(() => {
+                const move = game.computerMove();
+                game.computerTurn = false;
+                
+                updateGameView();
+                
+                if (game.isGameOver()) {
+                    updateStats('loss');
+                }
+                
+                if (document.querySelector('.tab-content.active').id === 'tree-tab') {
+                    visualizeMoveTree();
+                }
+            }, 1000);
+        }
+
+        function makeMove() {
+            if (!game || game.computerTurn || game.isGameOver()) return;
+            
+            const selected = Array.from(document.querySelectorAll('.stick.selected'))
+                .map(el => parseInt(el.dataset.index))
+                .sort((a, b) => a - b);
+            
+            if (selected.length === 0) {
+                alert('Выберите хотя бы одну палочку');
+                return;
+            }
+            
+            if (game.regime >= 3 && game.regime <= 4) {
+                const isConsecutive = selected.every((val, i, arr) => 
+                    i === 0 || val === arr[i-1] + 1);
+                
+                if (!isConsecutive) {
+                    alert('В этом режиме нужно выбирать палочки, идущие подряд!');
+                    return;
+                }
+            }
+            
+            let isValidCount = true;
+            let errorMsg = '';
+            
+            switch (game.regime) {
+                case 1:
+                    isValidCount = selected.length >= 1 && selected.length <= game.k;
+                    errorMsg = `Можно взять от 1 до ${game.k} палочек`;
+                    break;
+                case 2:
+                    isValidCount = selected.length >= game.a && selected.length <= game.b;
+                    errorMsg = `Можно взять от ${game.a} до ${game.b} палочек`;
+                    break;
+                case 3:
+                    isValidCount = selected.length >= 1 && selected.length <= game.k;
+                    errorMsg = `Можно взять от 1 до ${game.k} палочек подряд`;
+                    break;
+                case 4:
+                    isValidCount = selected.length >= game.a && selected.length <= game.b;
+                    errorMsg = `Можно взять от ${game.a} до ${game.b} палочек подряд`;
+                    break;
+                case 5:
+                    isValidCount = selected.length >= 1 && selected.length <= 3;
+                    if (selected.length === 3) {
+                        const isConsecutive = selected[2] === selected[1] + 1 && 
+                                             selected[1] === selected[0] + 1;
+                        if (!isConsecutive) {
+                            isValidCount = false;
+                            errorMsg = 'Можно взять 1 любую, 2 любые или 3 подряд палочки';
+                        }
+                    }
+                    break;
+            }
+            
+            if (!isValidCount) {
+                alert(errorMsg);
+                return;
+            }
+            
+            try {
+                game.applyMove(selected);
+                game.computerTurn = true;
+                
+                updateGameView();
+                
+                if (game.isGameOver()) {
+                    document.getElementById('status').textContent = "Вы выиграли!";
+                    updateStats('win');
+                    return;
+                }
+                
+                setTimeout(computerTurn, 500);
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            setupTabs();
+            
+            // Переключение режимов игры
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const mode = parseInt(this.dataset.mode);
+                    document.getElementById('mode-1-params').style.display = 
+                        (mode === 1 || mode === 3) ? 'block' : 'none';
+                    document.getElementById('mode-2-params').style.display = 
+                        (mode === 2 || mode === 4) ? 'block' : 'none';
+                });
+            });
+            
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            
+            document.getElementById('make-move').addEventListener('click', makeMove);
+
+            document.getElementById('hint-btn').addEventListener('click', function() {
+                if (game) { 
+                    game.showHint();
+                }
+            });
+            
+            document.getElementById('new-game').addEventListener('click', function() {
+                document.querySelector('.game-area').style.display = 'none';
+                document.querySelector('.settings').style.display = 'block';
+            });
+        });
+
+        function startGame() {
+            if (!validateInputs()) return;
+            
+            const regime = parseInt(document.querySelector('.mode-btn.active').dataset.mode);
+            const n = parseInt(document.getElementById('stick-count').value);
+            const k = parseInt(document.getElementById('k-value').value);
+            const a = parseInt(document.getElementById('a-value').value);
+            const b = parseInt(document.getElementById('b-value').value);
+            const computerFirst = document.getElementById('computer-first').checked;
+            const trainingMode = document.getElementById('training-mode').checked;
+            
+            game = new StickGame(n, regime, k, a, b, computerFirst);
+            
+            document.querySelector('.settings').style.display = 'none';
+            document.querySelector('.game-area').style.display = 'block';
+            document.getElementById('training-panel').style.display = trainingMode ? 'block' : 'none';
+            
+            updateGameView();
+            updateStrategyExplanation();
+            displayStats();
+            
+            if (game.computerTurn) {
+                setTimeout(() => {
+                    computerTurn();
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>
